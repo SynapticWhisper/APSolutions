@@ -9,6 +9,15 @@ class CreateDocument(BaseModel):
     created_date: datetime
 
 
+class ESDocumentModel(BaseModel):
+    id: int
+    text: str
+
+    class Config:
+        strict = True
+        from_attributes = True
+
+
 class Document(BaseModel):
     id: int
     rubrics: List[str]

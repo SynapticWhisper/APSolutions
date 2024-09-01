@@ -9,10 +9,6 @@ class CreateDocument(BaseModel):
     created_date: datetime
 
 
-class CreateManyDocs(BaseModel):
-    docs_list: List[CreateDocument]
-
-
 class Document(BaseModel):
     id: int
     rubrics: List[str]

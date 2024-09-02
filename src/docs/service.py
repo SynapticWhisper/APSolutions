@@ -8,11 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_async_session
 from src.docs import models
 from src.docs.schemas import CreateDocument, ESDocumentModel
-from src.docs.ES_Serviece import AsyncESClient
+from docs.es_service import AsyncESClient
 
 
 
-class DocumnetCRUD:
+class DocumentCRUD:
     def __init__(self, session=Depends(get_async_session)):
         self.__session: AsyncSession = session
         self.__es_search = AsyncESClient()
@@ -28,7 +28,24 @@ class DocumnetCRUD:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
         else:
             await self.__es_search.add_document(ESDocumentModel(id=new_document.id, text=new_document.text))
-            return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content={"message": "Document created successfully"})
+            return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message": "Document created successfully"})
+
+    async def create_many(self, doc_list: List[CreateDocument]) -> JSONResponse:
+        if not doc_list:
+            return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content={"message": "Northing to add"})
+        new_docs_list = [
+            models.Document(**document.model_dump()) for document in doc_list
+        ]
+        try:
+            self.__session.add_all(new_docs_list)
+            await self.__session.commit()
+        except IntegrityError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+        else:
+            await self.__es_search.add_many(
+                [ESDocumentModel(id=new_document.id, text=new_document.text) for new_document in new_docs_list]
+            )
+            return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message": "Documents created successfully"})
 
     async def __get_by_id(self, document_id: int) -> models.Document:
         stmt = (
@@ -40,13 +57,13 @@ class DocumnetCRUD:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         return document
 
-    async def __get_many(self, document_ids: Optional[List[int]], limit: int) -> Optional[List[models.Document]]:
-        if not document_ids:
+    async def __get_many(self, documents_ids: Optional[List[int]], limit: int) -> Optional[List[models.Document]]:
+        if not documents_ids:
             return None
 
         stmt = (
             select(models.Document)
-            .where(models.Document.id.in_(document_ids))
+            .where(models.Document.id.in_(documents_ids))
             .limit(limit)
             .order_by(
                 asc(models.Document.created_date)

@@ -18,7 +18,7 @@ class ESDocumentModel(BaseModel):
         from_attributes = True
 
 
-class Document(BaseModel):
+class DocumentSchema(BaseModel):
     id: int
     rubrics: List[str]
     text: str

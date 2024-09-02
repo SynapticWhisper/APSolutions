@@ -27,14 +27,21 @@ class AsyncESClient:
                 }
             }
 
+    async def add_many(self, document_list: List[ESDocumentModel]) -> list | None:
+        errors: list = []
+        async for ok, result in async_streaming_bulk(self._es_client, self.__generate_docs(document_list)):
+            action, result = result.popitem()
+            if not ok:
+                logging.info("Failed to %s document %s", action, result)
+                errors.append(result)
+        return errors if errors else None
+
     async def add_document(self, document: ESDocumentModel) -> None:
         await self._es_client.index(index=self.INDEX_NAME, id=document.id, document={'text': document.text})
 
-
-    async def delete_document(self, documnet_id: int) -> None:
-        await self._es_client.delete(index=self.INDEX_NAME, id=documnet_id)
+    async def delete_document(self, document_id: int) -> None:
+        await self._es_client.delete(index=self.INDEX_NAME, id=document_id)
     
-
     async def search_documents(self, query: str) -> AsyncGenerator[Any, Any, int]:
         async for doc in async_scan(
             client=self._es_client,
@@ -43,9 +50,5 @@ class AsyncESClient:
         ):
             yield doc["_id"]
     
-    async def on_startup(self, documents: List[ESDocumentModel]) -> None:
-        async for ok, result in async_streaming_bulk(self._es_client, self.__generate_docs(documents)):
-            action, result = result.popitem()
-            if not ok:
-                logging.info("Failed to %s document %s", action, result)
-        return
+    async def on_startup(self, document_list: List[ESDocumentModel]) -> list | None:
+        return await self.add_many(document_list)

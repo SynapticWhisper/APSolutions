@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_async_session
 from src.docs import models
 from src.docs.schemas import CreateDocument, ESDocumentModel
-from docs.es_service import AsyncESClient
+from src.docs.es_service import AsyncESClient
 
 
 

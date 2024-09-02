@@ -42,7 +42,7 @@ class AsyncESClient:
     async def delete_document(self, document_id: int) -> None:
         await self._es_client.delete(index=self.INDEX_NAME, id=document_id)
     
-    async def search_documents(self, query: str) -> AsyncGenerator[Any, Any, int]:
+    async def search_documents(self, query: str) -> AsyncGenerator[Any, int]:
         async for doc in async_scan(
             client=self._es_client,
             index=self.INDEX_NAME,

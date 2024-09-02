@@ -11,7 +11,6 @@ from src.docs.schemas import CreateDocument, ESDocumentModel
 from src.docs.es_service import AsyncESClient
 
 
-
 class DocumentCRUD:
     def __init__(self, session=Depends(get_async_session)):
         self.__session: AsyncSession = session
@@ -21,6 +20,9 @@ class DocumentCRUD:
         new_document = models.Document(
             **document.model_dump()
         )
+        import hashlib
+        model_json = document.model_dump_json()
+        model_md5 = hashlib.md5(model_json).hexdigest()
         try:
             self.__session.add(new_document)
             await self.__session.commit()

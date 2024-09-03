@@ -52,11 +52,3 @@ class AsyncESClient:
     
     async def on_shutdown(self):
         await self._es_client.close()
-    
-
-# async def main():
-#     es_client = AsyncElasticsearch("http://localhost:9200")
-#     if await es_client.ping():
-#         print("+")
-#     else:
-#         print("-")

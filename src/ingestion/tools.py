@@ -56,11 +56,11 @@ def get_documnets(file_path: str, sep: str) -> List[CreateDocument]:
         ) for _, row in df.iterrows()
     ]
 
-async def import_csv(file_path: str, sep: str, service: DocumentCRUD = Depends()) -> JSONResponse:
+async def import_csv(file_path: str, sep: str, service: DocumentCRUD) -> JSONResponse:
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as pool:
-        documnets_to_add: List[CreateDocument] = await loop.run_in_executor(pool, get_documnets, file_path, sep)
-    await service.create_many(documnets_to_add)
+        documents_to_add: List[CreateDocument] = await loop.run_in_executor(pool, get_documnets, file_path, sep)
+    await service.create_many(documents_to_add)
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message": "Documents added successfully"})
 
 

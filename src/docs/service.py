@@ -1,4 +1,5 @@
 from typing import List, Optional
+import elastic_transport
 from fastapi import Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, asc, desc
@@ -20,9 +21,6 @@ class DocumentCRUD:
         new_document = models.Document(
             **document.model_dump()
         )
-        import hashlib
-        model_json = document.model_dump_json()
-        model_md5 = hashlib.md5(model_json).hexdigest()
         try:
             self.__session.add(new_document)
             await self.__session.commit()
@@ -75,9 +73,12 @@ class DocumentCRUD:
         return documnents
     
     async def search_and_get_many(self, query: str, limit: int = 20) -> Optional[List[models.Document]]:
-        document_ids = [doc_id async for doc_id in self.__es_search.search_documents(query)]
-        documents = await self.__get_many(document_ids, limit)
-        return documents
+        try:
+            document_ids = [doc_id async for doc_id in self.__es_search.search_documents(query)]
+            documents = await self.__get_many(document_ids, limit)
+            return documents
+        except elastic_transport.ConnectionError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     async def __update(self):
         ...

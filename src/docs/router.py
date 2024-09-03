@@ -1,3 +1,5 @@
+"""Documnet api router."""
+
 from typing import List
 from fastapi import APIRouter, Depends, status
 from src.docs.schemas import DocumentSchema
@@ -15,6 +17,7 @@ async def get_documents(
     limit: int = 20,
     service: DocumentCRUD = Depends()
 ):
+    """Search documents by query phrase."""
     return await service.search_and_get_many(query=query, limit=limit)
 
 
@@ -23,4 +26,5 @@ async def delete_documnet(
     document_id: int,
     service: DocumentCRUD = Depends()
 ):
+    """Delete documnet by id."""
     return await service.delete(document_id)

@@ -11,10 +11,7 @@ class AsyncESClient:
     INDEX_NAME = "documents"
 
     def __init__(self):
-        self._es_client: AsyncElasticsearch = AsyncElasticsearch(
-            cloud_id=settings.es_url,
-            api_key=settings.es_api_key
-        )
+        self._es_client: AsyncElasticsearch = AsyncElasticsearch(settings.es_url)
     
     @classmethod
     async def __generate_docs(cls, documents: List[ESDocumentModel]):
@@ -48,7 +45,18 @@ class AsyncESClient:
             index=self.INDEX_NAME,
             query={"query": {"match": {"text": query}}}
         ):
-            yield doc["_id"]
+            yield int(doc["_id"])
     
-    async def on_startup(self, document_list: List[ESDocumentModel]) -> list | None:
-        return await self.add_many(document_list)
+    # async def on_startup(self, document_list: List[ESDocumentModel]) -> list | None:
+    #     return await self.add_many(document_list)
+    
+    async def on_shutdown(self):
+        await self._es_client.close()
+    
+
+# async def main():
+#     es_client = AsyncElasticsearch("http://localhost:9200")
+#     if await es_client.ping():
+#         print("+")
+#     else:
+#         print("-")

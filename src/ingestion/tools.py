@@ -1,14 +1,18 @@
-import json
 import asyncio
-from typing import List
+from concurrent.futures import ThreadPoolExecutor
+import json
 import pandas as pd
-from urllib.parse import urlencode
-from fastapi import HTTPException, UploadFile
+from fastapi import Depends, HTTPException, UploadFile, status
+from fastapi.responses import JSONResponse
 from httpx import AsyncClient, HTTPStatusError
+from typing import List
+from urllib.parse import urlencode
+
+from src.docs.service import DocumentCRUD
 from src.docs.schemas import CreateDocument
 
 
-async def download_from_yadisk(ya_disk_url: str, output_file: str = "src/files/test_data.csv"):
+async def download_from_yadisk(ya_disk_url: str, output_file: str = "src/tmp/new_data.csv"):
     base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
     try:
         async with AsyncClient() as client:
@@ -33,16 +37,16 @@ async def download_from_yadisk(ya_disk_url: str, output_file: str = "src/files/t
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Произошла ошибка: {err}")
     
-async def download_file(file: UploadFile, output_file: str = "src/files/test_data.csv") -> str:
+async def download_file(file: UploadFile, output_file: str = "src/tmp/new_data.csv") -> str:
     with open(output_file, "wb") as file_create:
         file_create.write(await file.read())
     return output_file
 
 
-def get_documnets(file_path: str) -> List[CreateDocument]:
-    df = pd.read_csv(file_path, sep=',')
+def get_documnets(file_path: str, sep: str) -> List[CreateDocument]:
+    df = pd.read_csv(file_path, sep=sep)
     df['created_date'] = pd.to_datetime(df['created_date'])
-    df['rubrics'] = df['rubrics'].apply(json.loads)
+    df['rubrics'] = df['rubrics'].apply(lambda rubric: json.loads(rubric.replace("'", '"')))
 
     return [
         CreateDocument(
@@ -51,6 +55,13 @@ def get_documnets(file_path: str) -> List[CreateDocument]:
             created_date=row['created_date']
         ) for _, row in df.iterrows()
     ]
+
+async def import_csv(file_path: str, sep: str, service: DocumentCRUD = Depends()) -> JSONResponse:
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        documnets_to_add: List[CreateDocument] = await loop.run_in_executor(pool, get_documnets, file_path, sep)
+    await service.create_many(documnets_to_add)
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message": "Documents added successfully"})
 
 
 if __name__ == "__main__":

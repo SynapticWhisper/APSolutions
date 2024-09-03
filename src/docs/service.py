@@ -68,7 +68,7 @@ class DocumentCRUD:
             .where(models.Document.id.in_(documents_ids))
             .limit(limit)
             .order_by(
-                asc(models.Document.created_date)
+                desc(models.Document.created_date)
             )
         )
         documnents: Optional[List[models.Document]] = (await self.__session.execute(stmt)).scalars().all()
@@ -82,9 +82,9 @@ class DocumentCRUD:
     async def __update(self):
         ...
 
-    async def delete(self, document_id: int) -> JSONResponse:
+    async def delete(self, document_id: int) -> HTTPException:
         document = await self.__get_by_id(document_id)
         await self.__session.delete(document)
         await self.__session.commit()
         await self.__es_search.delete_document(document_id)
-        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content={"message": "Document deleted successfully"})
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)

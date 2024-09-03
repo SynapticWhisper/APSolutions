@@ -1,6 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, status
 from src.docs.schemas import DocumentSchema
 from src.docs.service import DocumentCRUD
 
@@ -19,7 +18,7 @@ async def get_documents(
     return await service.search_and_get_many(query=query, limit=limit)
 
 
-@router.delete("/delete/{document_id}", response_class=JSONResponse)
+@router.delete("/delete/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_documnet(
     document_id: int,
     service: DocumentCRUD = Depends()

@@ -1,4 +1,7 @@
-"""Module functionality ..."""
+"""
+Module functionality: Provides endpoints for uploading documents to the database 
+from a file or a Yandex Disk link.
+"""
 
 from typing import Optional
 from fastapi import APIRouter, Depends, UploadFile
@@ -17,7 +20,17 @@ async def upload_from_file(
     separator: Optional[str] = ",",
     service: DocumentCRUD = Depends()
 ):
-    """Upload data from users file."""
+    """
+    Uploads document data from a user-uploaded file to the database.
+
+    Args:
+        file (UploadFile): The file uploaded by the user.
+        separator (Optional[str]): The delimiter used in the CSV file. Defaults to a comma (",").
+        service (DocumentCRUD): Dependency injection of the DocumentCRUD service.
+
+    Returns:
+        JSONResponse: A response indicating the success of the operation.
+    """
     file_path: str = await download_file(file)
     return await import_csv(file_path, sep=separator, service=service)
 
@@ -28,7 +41,17 @@ async def upload_from_yandex_disk(
     separator: Optional[str] = ",",
     service: DocumentCRUD = Depends()
 ):
-    """Upload data from Yandex disk."""
+    """
+    Uploads document data from a file on Yandex Disk to the database.
+
+    Args:
+        disk_link (str): The public link to the file on Yandex Disk.
+        separator (Optional[str]): The delimiter used in the CSV file. Defaults to a comma (",").
+        service (DocumentCRUD): Dependency injection of the DocumentCRUD service.
+
+    Returns:
+        JSONResponse: A response indicating the success of the operation.
+    """
     file_path: str = await download_from_yadisk(disk_link)
     return await import_csv(file_path, sep=separator, service=service)
     

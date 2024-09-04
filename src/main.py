@@ -1,8 +1,7 @@
-"""Module functionality ..."""
-
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 from src.docs.router import router as DocumnetRouter
+from src.docs.es_service import AsyncESClient
 from src.ingestion.router import router as IngestionRouter
 
 app = FastAPI(
@@ -15,6 +14,6 @@ app.include_router(DocumnetRouter)
 app.include_router(IngestionRouter)
 
 
-# @app.on_event("shutdown")
-# async def app_shutdown():
-#     await es.close()
+@app.on_event("shutdown")
+async def app_shutdown(es_service: AsyncESClient = Depends()):
+    await es_service.on_shutdown()

@@ -9,7 +9,6 @@ class Settings(BaseSettings):
 
     es_host: str
     es_port: int
-    # es_api_key: str
 
     @property
     def db_url(self) -> str:

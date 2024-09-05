@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16.4
-    container_name: TestDB
+    container_name: TestTaskDB
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PWD}
@@ -19,7 +19,7 @@ services:
 
   elasticsearch:
     image: elasticsearch:8.15.0
-    container_name: TestES
+    container_name: TestTaskES
     environment:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
@@ -34,11 +34,10 @@ services:
     env_file:
       - .env
 
-  fastapi:
-    build:
-      context: .
-    container_name: fastapi-app
-    command: bash -c "alembic upgrade head && uvicorn src.main:app --reload"
+  web:
+    image: apsolutions_task
+    container_name: TestTaskFA
+    command: bash -c  "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}

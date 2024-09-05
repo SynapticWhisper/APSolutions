@@ -6,7 +6,6 @@ class Settings(BaseSettings):
     db_user: str
     db_pwd: str
     db_name: str
-
     es_host: str
     es_port: int
 

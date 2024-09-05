@@ -1,9 +1,5 @@
 # Тестовое задание Python
 
-Необходимо написать очень простой поисковик по текстам документов. Данные хранятся в БД по желанию, поисковый индекс в эластике.
-
-Ссылка на тестовый массива данных: [[csv](https://disk.yandex.ru/d/UYooXd9q2yqTMQ)]
-
 **Структура БД:**
 
 - `id` - уникальный для каждого документа;
@@ -16,27 +12,70 @@
 - `id` - id из базы;
 - `text` - текст из структуры БД.
 
-**Необходимые методы**
+## Инструкция по запуску
 
-- сервис должен принимать на вход произвольный текстовый запрос, искать по тексту документа в индексе и возвращать первые 20 документов со всем полями БД, упорядоченные по дате создания;
-- удалять документ из БД и индекса по полю `id`.
+1. **Измените директорию на проектную**
 
-**Технические требования:**
+```bash
+cd apsolutions_testTask
+```
 
-- любой python фреймворк кроме Django и DRF;
-- `README` с гайдом по поднятию;
-- `docs.json` - документация к сервису в формате openapi.
+2. **Создайте Docker-сеть**
 
-**Программа максимум:**
+```bash
+docker network create mynetwork
+```
 
-- функциональные тесты;
-- сервис работает в Docker;
-- асинхронные вызовы.
+3. **Получите `Gateway` сети**
+
+```bash
+docker network inspect mynetwork
+```
+Найдите и сохраните `Gateway` сети, например:
+```json
+"Gateway": "172.29.0.1"
+```
+
+4. **Создайте файл .env**
+
+```bash
+nano .env
+```
+
+Пример содержимого .env файла:
+
+```makefile
+DB_HOST=<network geteway>
+DB_PORT=5432
+DB_USER=admin
+DB_PWD=12345
+DB_NAME=TestTaskDB
+ES_HOST=<network geteway>
+ES_PORT=9200
+```
+
+5. **Запустите контейнер PostgreSQL**
+*Используйте данные указанные в .env файле*
+```bash
+docker run --name TestTaskDB -p 5432:5432 -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=12345 -e POSTGRES_DB=TestTaskDB -d postgres:16.4
+```
 
 
-sudo rm -rf /var/lib/docker /etc/docker
-sudo rm /etc/apparmor.d/docker
-sudo groupdel docker
-sudo rm -rf /var/run/docker.sock
-sudo rm -rf /var/lib/containerd
-sudo rm -r ~/.docker
+6. **Запустите контейнер Elasticsearch**
+
+```bash
+docker run -d --name TestTaskES --net mynetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "xpack.security.enabled=false" elasticsearch:8.15.0
+```
+
+
+7. **Постройте Docker-образ для проекта**
+
+```bash
+docker build -t apsolutions_task ./
+```
+
+8. **Запустите контейнер приложения**
+
+```bash
+docker run -d --name TestTaskFA -p 8000:8000 apsolutions_task
+```

@@ -15,7 +15,7 @@ All routes are prefixed with `/docs` and tagged with "Documents" for easy organi
 API documentation.
 """
 
-from typing import List, Annotated
+from typing import List, Annotated, Optional
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse
 from src.docs.schemas import DocumentSchema, CreateDocument
@@ -48,7 +48,7 @@ async def add_document(
     return await service.create(new_document)
 
 
-@router.get("/search", response_model=List[DocumentSchema])
+@router.get("/search", response_model=Optional[List[DocumentSchema]])
 async def get_documents(
     query: str,
     limit: Annotated[int, Query(title="Number of items to return", ge=0, le=20)] = 20,

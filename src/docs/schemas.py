@@ -16,13 +16,19 @@ compatibility with ORM models.
 
 from datetime import datetime
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class CreateDocument(BaseModel):
     rubrics: List[str]
     text: str
     created_date: datetime
+
+    @field_validator('created_date')
+    def remove_timezone(cls, value):
+        if value.tzinfo is not None:
+            return value.replace(tzinfo=None)
+        return value
 
 
 class ESDocumentModel(BaseModel):

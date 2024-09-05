@@ -32,3 +32,11 @@
 - функциональные тесты;
 - сервис работает в Docker;
 - асинхронные вызовы.
+
+
+sudo rm -rf /var/lib/docker /etc/docker
+sudo rm /etc/apparmor.d/docker
+sudo groupdel docker
+sudo rm -rf /var/run/docker.sock
+sudo rm -rf /var/lib/containerd
+sudo rm -r ~/.docker

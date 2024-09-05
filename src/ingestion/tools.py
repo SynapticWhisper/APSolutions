@@ -71,9 +71,15 @@ async def download_file(file: UploadFile, output_file: str = "src/tmp/new_data.c
     Returns:
         str: The path to the saved file.
     """
-    with open(output_file, "wb") as file_create:
-        file_create.write(await file.read())
-    return output_file
+    try:
+        with open(output_file, "wb") as file_create:
+            file_create.write(await file.read())
+        return output_file
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error duiring downloading file: {e}"
+        ) from e
 
 def get_documents(file_path: str, sep: str) -> List[CreateDocument]:
     """
@@ -86,10 +92,15 @@ def get_documents(file_path: str, sep: str) -> List[CreateDocument]:
     Returns:
         List[CreateDocument]: A list of CreateDocument objects created from the CSV data.
     """
-    df = pd.read_csv(file_path, sep=sep)
-    df['created_date'] = pd.to_datetime(df['created_date'])
-    df['rubrics'] = df['rubrics'].apply(lambda rubric: json.loads(rubric.replace("'", '"')))
-
+    try:
+        df = pd.read_csv(file_path, sep=sep)
+        df['created_date'] = pd.to_datetime(df['created_date'])
+        df['rubrics'] = df['rubrics'].apply(lambda rubric: json.loads(rubric.replace("'", '"')))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error duiring creating dataframe: {e}"
+        ) from e
     return [
         CreateDocument(
             rubrics=row['rubrics'],

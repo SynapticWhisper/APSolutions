@@ -1,0 +1,316 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Тестовое задание Python",
+      "description": "Простой поисковик по текстам документов. Данные хранятся в БД(PostgreSQL), поисковый индекс в ElasticSearch.",
+      "version": "0.1.0"
+    },
+    "paths": {
+      "/docs/search": {
+        "get": {
+          "tags": [
+            "Documents"
+          ],
+          "summary": "Get Documents",
+          "description": "Search for documents by a query phrase.\n\nThis endpoint allows users to search for documents based on a specified query string.\nThe search is performed using an integrated Elasticsearch service, which returns documents\nmatching the query. The number of returned documents is limited by the `limit` parameter.\n\nArgs:\n    query (str): The query string used to search for documents.\n    limit (int, optional): The maximum number of documents to return. Defaults to 20.\n\nReturns:\n    List[DocumentSchema]: A list of documents that match the search query.",
+          "operationId": "get_documents_docs_search_get",
+          "parameters": [
+            {
+              "name": "query",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Query"
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "maximum": 20,
+                "minimum": 0,
+                "title": "Number of items to return",
+                "default": 20
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DocumentSchema"
+                    },
+                    "title": "Response Get Documents Docs Search Get"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/delete/{document_id}": {
+        "delete": {
+          "tags": [
+            "Documents"
+          ],
+          "summary": "Delete Documnet",
+          "description": "Delete a document by its ID.\n\nThis endpoint deletes a document from the database and Elasticsearch index based on the provided\ndocument ID. It raises a 404 error if the document is not found.\n\nArgs:\n    document_id (int): The ID of the document to be deleted.\n\nReturns:\n    None: Returns HTTP 204 status code indicating successful deletion with no content in the response.",
+          "operationId": "delete_documnet_docs_delete__document_id__delete",
+          "parameters": [
+            {
+              "name": "document_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "title": "Document Id"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "Successful Response"
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/upload-from-file": {
+        "post": {
+          "summary": "Upload From File",
+          "description": "Uploads document data from a user-uploaded file to the database.\n\nArgs:\n    file (UploadFile): The file uploaded by the user.\n    separator (Optional[str]): The delimiter used in the CSV file. Defaults to a comma (\",\").\n    \nReturns:\n    JSONResponse: A response indicating the success of the operation.",
+          "operationId": "upload_from_file_upload_from_file_post",
+          "parameters": [
+            {
+              "name": "separator",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": ",",
+                "title": "Separator"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "$ref": "#/components/schemas/Body_upload_from_file_upload_from_file_post"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/upload-from-yandex-disk": {
+        "post": {
+          "summary": "Upload From Yandex Disk",
+          "description": "Uploads document data from a file on Yandex Disk to the database.\n\nArgs:\n    disk_link (str): The public link to the file on Yandex Disk.\n    separator (Optional[str]): The delimiter used in the CSV file. Defaults to a comma (\",\").\n\nReturns:\n    JSONResponse: A response indicating the success of the operation.",
+          "operationId": "upload_from_yandex_disk_upload_from_yandex_disk_post",
+          "parameters": [
+            {
+              "name": "disk_link",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Disk Link"
+              }
+            },
+            {
+              "name": "separator",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": ",",
+                "title": "Separator"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Body_upload_from_file_upload_from_file_post": {
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary",
+              "title": "File"
+            }
+          },
+          "type": "object",
+          "required": [
+            "file"
+          ],
+          "title": "Body_upload_from_file_upload_from_file_post"
+        },
+        "DocumentSchema": {
+          "properties": {
+            "id": {
+              "type": "integer",
+              "title": "Id"
+            },
+            "rubrics": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Rubrics"
+            },
+            "text": {
+              "type": "string",
+              "title": "Text"
+            },
+            "created_date": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Created Date"
+            }
+          },
+          "type": "object",
+          "required": [
+            "id",
+            "rubrics",
+            "text",
+            "created_date"
+          ],
+          "title": "DocumentSchema"
+        },
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        }
+      }
+    }
+  }

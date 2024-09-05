@@ -18,8 +18,9 @@ monitoring.
 
 import logging
 from typing import Any, AsyncGenerator, List
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, NotFoundError
 from elasticsearch.helpers import async_streaming_bulk, async_scan
+from fastapi import HTTPException
 from src.config import settings
 from src.docs.schemas import ESDocumentModel
 
@@ -57,7 +58,7 @@ class AsyncESClient:
                 }
             }
 
-    async def add_many(self, document_list: List[ESDocumentModel]) -> list | None:
+    async def add_many(self, document_list: List[ESDocumentModel]) -> int:
         """
         Adds multiple documents to the Elasticsearch index.
 
@@ -65,9 +66,9 @@ class AsyncESClient:
             document_list (List[ESDocumentModel]): A list of documents to be added.
 
         Returns:
-            List[dict] | None: A list of errors if any documents failed, otherwise None.
+            Optional[list]: A list of errors if any documents failed, otherwise None.
         """
-        errors: list = []
+        errors: int = 0
         async for ok, result in async_streaming_bulk(
             self._es_client,
             self.__generate_docs(document_list)
@@ -75,8 +76,8 @@ class AsyncESClient:
             action, result = result.popitem()
             if not ok:
                 logging.info("Failed to %s document %s", action, result)
-                errors.append(result)
-        return errors if errors else None
+                errors += 1
+        return errors
 
     async def add_document(self, document: ESDocumentModel) -> None:
         """
@@ -110,12 +111,15 @@ class AsyncESClient:
         Yields:
             AsyncGenerator[int, None]: An async generator yielding the IDs of matching documents.
         """
-        async for doc in async_scan(
-            client=self._es_client,
-            index=self.INDEX_NAME,
-            query={"query": {"match": {"text": query}}}
-        ):
-            yield int(doc["_id"])
+        try:
+            async for doc in async_scan(
+                client=self._es_client,
+                index=self.INDEX_NAME,
+                query={"query": {"match": {"text": query}}}
+            ):
+                yield int(doc["_id"])
+        except NotFoundError as e:
+            raise HTTPException(status_code=404, detail="No documents in Elastic index yet") from e
 
     # async def on_startup(self, document_list: List[ESDocumentModel]) -> list | None:
     #     return await self.add_many(document_list)

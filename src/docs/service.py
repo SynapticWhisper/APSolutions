@@ -95,7 +95,7 @@ class DocumentCRUD:
             await self.__session.commit()
         except IntegrityError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
-        await self.__es_search.add_many(
+        errors = await self.__es_search.add_many(
             [
                 ESDocumentModel(
                     id=new_document.id,
@@ -105,7 +105,7 @@ class DocumentCRUD:
         )
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={"message": "Documents created successfully"}
+            content={"message": f"Documents created. Errors occurred during execution with {errors} documents"}
         )
 
     async def __get_by_id(self, document_id: int) -> models.Document:
@@ -155,8 +155,9 @@ class DocumentCRUD:
                 desc(models.Document.created_date)
             )
         )
-        documnents = (await self.__session.execute(stmt)).scalars().all()
-        return documnents
+        documents = (await self.__session.execute(stmt)).scalars().all()
+        print(documents)
+        return documents
 
     async def search_and_get_many(
             self,

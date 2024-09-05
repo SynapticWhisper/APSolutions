@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16.4
+    container_name: TestDB
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PWD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - mynetwork
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  elasticsearch:
+    image: elasticsearch:8.15.0
+    container_name: TestES
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - mynetwork
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    env_file:
+      - .env
+
+  fastapi:
+    build:
+      context: .
+    container_name: fastapi-app
+    command: bash -c "alembic upgrade head && uvicorn src.main:app --reload"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PWD: ${DB_PWD}
+      DB_NAME: ${DB_NAME}
+      ES_HOST: ${ES_HOST}
+      ES_PORT: ${ES_PORT}
+    ports:
+      - "8000:8000"
+    networks:
+      - mynetwork
+    depends_on:
+      - postgres
+      - elasticsearch
+    env_file:
+      - .env
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  pgdata:
+  esdata:

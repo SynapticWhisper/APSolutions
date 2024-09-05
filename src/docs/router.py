@@ -17,13 +17,35 @@ API documentation.
 
 from typing import List, Annotated
 from fastapi import APIRouter, Depends, Query, status
-from src.docs.schemas import DocumentSchema
+from fastapi.responses import JSONResponse
+from src.docs.schemas import DocumentSchema, CreateDocument
 from src.docs.service import DocumentCRUD
 
 router = APIRouter(
     prefix="/docs",
     tags=["Documents"]
 )
+
+
+@router.post(
+    "/add_documnet",
+    status_code=status.HTTP_201_CREATED,
+    response_class=JSONResponse
+)
+async def add_document(
+    new_document: CreateDocument,
+    service: DocumentCRUD = Depends()
+):
+    """
+    Adds a new document to the database.
+
+    Parameters:
+    - new_document (CreateDocument): An object containing the data for the document to be added.
+
+    Returns:
+    - JSONResponse with the created document's data and a 201 (Created) status on success.
+    """
+    return await service.create(new_document)
 
 
 @router.get("/search", response_model=List[DocumentSchema])
@@ -42,8 +64,6 @@ async def get_documents(
     Args:
         query (str): The query string used to search for documents.
         limit (int, optional): The maximum number of documents to return. Defaults to 20.
-        service (DocumentCRUD): A service instance that handles document-related operations 
-            (automatically injected by FastAPI).
 
     Returns:
         List[DocumentSchema]: A list of documents that match the search query.
@@ -63,12 +83,9 @@ async def delete_documnet(
     document ID. It raises a 404 error if the document is not found.
 
     Args:
-        document_id (int):      The ID of the document to be deleted.
-        service (DocumentCRUD): A service instance that handles document-related operations 
-                                (automatically injected by FastAPI).
+        document_id (int): The ID of the document to be deleted.
 
     Returns:
-        None:                   Returns HTTP 204 status code indicating successful deletion with no
-                                content in the response.
+        None: Returns HTTP 204 status code indicating successful deletion with no content in the response.
     """
     return await service.delete(document_id)

@@ -11,7 +11,10 @@ from src.docs.service import DocumentCRUD
 from src.ingestion.tools import download_file, download_from_yadisk, import_csv
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/ingestion",
+    tags=["Ingestion"]
+)
 
 
 @router.post("/upload-from-file", response_class=JSONResponse)
@@ -26,8 +29,7 @@ async def upload_from_file(
     Args:
         file (UploadFile): The file uploaded by the user.
         separator (Optional[str]): The delimiter used in the CSV file. Defaults to a comma (",").
-        service (DocumentCRUD): Dependency injection of the DocumentCRUD service.
-
+        
     Returns:
         JSONResponse: A response indicating the success of the operation.
     """
@@ -47,7 +49,6 @@ async def upload_from_yandex_disk(
     Args:
         disk_link (str): The public link to the file on Yandex Disk.
         separator (Optional[str]): The delimiter used in the CSV file. Defaults to a comma (",").
-        service (DocumentCRUD): Dependency injection of the DocumentCRUD service.
 
     Returns:
         JSONResponse: A response indicating the success of the operation.

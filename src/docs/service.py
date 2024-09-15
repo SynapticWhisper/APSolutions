@@ -156,7 +156,6 @@ class DocumentCRUD:
             )
         )
         documents = (await self.__session.execute(stmt)).scalars().all()
-        print(documents)
         return documents
 
     async def search_and_get_many(
@@ -178,7 +177,7 @@ class DocumentCRUD:
             HTTPException: If there is a connection error with Elasticsearch.
         """
         try:
-            document_ids = [doc_id async for doc_id in self.__es_search.search_documents(query)]
+            document_ids = [doc_id async for doc_id in self.__es_search.search_documents(query, limit=limit)]
             documents = await self.__get_many(document_ids, limit)
             return documents
         except elastic_transport.ConnectionError as e:
@@ -197,8 +196,11 @@ class DocumentCRUD:
         Returns:
             HTTPException: A response indicating that the document was successfully deleted.
         """
-        document = await self.__get_by_id(document_id)
-        await self.__session.delete(document)
-        await self.__session.commit()
-        await self.__es_search.delete_document(document_id)
-        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+        try:
+            await self.__es_search.delete_document(document_id)
+            document = await self.__get_by_id(document_id)
+            await self.__session.delete(document)
+            await self.__session.commit()
+            return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e) from e

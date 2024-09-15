@@ -101,12 +101,13 @@ class AsyncESClient:
         """
         await self._es_client.delete(index=self.INDEX_NAME, id=document_id)
 
-    async def search_documents(self, query: str) -> AsyncGenerator[Any, int]:
+    async def search_documents(self, query: str, limit: int = 20) -> AsyncGenerator[Any, int]:
         """
         Searches for documents in the Elasticsearch index that match the given query.
 
         Args:
             query (str): The search query string.
+            limit (int): The maximum number of documents to return.
 
         Yields:
             AsyncGenerator[int, None]: An async generator yielding the IDs of matching documents.
@@ -115,7 +116,12 @@ class AsyncESClient:
             async for doc in async_scan(
                 client=self._es_client,
                 index=self.INDEX_NAME,
-                query={"query": {"match": {"text": query}}}
+                query={
+                    "query": {
+                        "match": {"text": query}
+                    },
+                    # "size": limit,
+                }
             ):
                 yield int(doc["_id"])
         except NotFoundError as e:

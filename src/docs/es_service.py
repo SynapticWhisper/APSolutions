@@ -120,7 +120,7 @@ class AsyncESClient:
                     "query": {
                         "match": {"text": query}
                     },
-                    # "size": limit,
+                    "size": limit,
                 }
             ):
                 yield int(doc["_id"])
